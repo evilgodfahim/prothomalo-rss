@@ -6,16 +6,19 @@ const path = require("path");
   const url = "https://www.prothomalo.com/opinion";
   const outputFile = path.resolve(__dirname, "opinion.html");
 
-  const browser = await puppeteer.launch({ headless: true, args: ["--no-sandbox"] });
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"]
+  });
   const page = await browser.newPage();
   await page.goto(url, { waitUntil: "networkidle2" });
 
   // Scroll to bottom to trigger lazy-loading
   await autoScroll(page);
 
-  // Extract only the article list HTML
+  // Extract only the article list
   const articlesHTML = await page.evaluate(() => {
-    const container = document.querySelector('section.list-articles'); // adjust selector if needed
+    const container = document.querySelector('section.list-articles');
     return container ? container.outerHTML : '';
   });
 
@@ -24,7 +27,6 @@ const path = require("path");
 
   await browser.close();
 
-  // helper function to scroll page
   async function autoScroll(page) {
     await page.evaluate(async () => {
       await new Promise((resolve) => {
@@ -34,7 +36,6 @@ const path = require("path");
           const scrollHeight = document.body.scrollHeight;
           window.scrollBy(0, distance);
           totalHeight += distance;
-
           if (totalHeight >= scrollHeight - window.innerHeight) {
             clearInterval(timer);
             resolve();
@@ -42,7 +43,6 @@ const path = require("path");
         }, 100);
       });
     });
-    // optional: wait a bit after scrolling for lazy-load
     await page.waitForTimeout(2000);
   }
 })();
