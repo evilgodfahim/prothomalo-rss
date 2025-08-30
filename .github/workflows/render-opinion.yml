@@ -14,13 +14,13 @@ jobs:
     steps:
       # 1️⃣ Checkout repository
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
-          persist-credentials: false  # use your PAT
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       # 2️⃣ Setup Node.js
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18
 
@@ -34,11 +34,9 @@ jobs:
 
       # 5️⃣ Commit & push generated HTML to root
       - name: Commit & push
-        env:
-          GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add opinion.html
           git diff --cached --quiet || git commit -m "Update rendered opinion page"
-          git push "https://x-access-token:${GH_PAT}@github.com/${{ github.repository }}.git" main
+          git push
