@@ -2,6 +2,9 @@ const puppeteer = require("puppeteer");
 const fs = require("fs");
 const path = require("path");
 
+// Helper function to replace deprecated waitForTimeout
+const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 (async () => {
   const url = "https://news.google.com/publications/CAAqBwgKMOfGlwswmfCuAw?hl=bn&gl=BD&ceid=BD%3Abn";
   const outputFile = path.resolve(__dirname, "opinion.html");
@@ -14,7 +17,9 @@ const path = require("path");
   const page = await browser.newPage();
   await page.setViewport({ width: 1280, height: 720 });
   await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
-  await page.waitForTimeout(5000); // lazy-load
+  
+  // Replace deprecated waitForTimeout with setTimeout promise
+  await wait(5000); // lazy-load
 
   const html = await page.evaluate(() => {
     const article = document.querySelector('article'); // adjust selector
@@ -24,7 +29,7 @@ const path = require("path");
     const ads = article.querySelectorAll('iframe, .ad, .ads, .google-ad, [class*="banner"]');
     ads.forEach(ad => ad.remove());
 
-    // Optionally, stop at “follow” link
+    // Optionally, stop at "follow" link
     const followLink = Array.from(article.querySelectorAll('*'))
                             .find(el => el.textContent.includes('প্রথম আলোর খবর পেতে গুগল নিউজ চ্যানেল ফলো করুন'));
     if (followLink) {
