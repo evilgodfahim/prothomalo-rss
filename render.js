@@ -1,7 +1,9 @@
-// render.js — robust, CI-safe Puppeteer render
+// render.js — robust, avoids page.waitForTimeout incompatibility
 const puppeteer = require("puppeteer");
 const fs = require("fs");
 const path = require("path");
+
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 (async () => {
   const url = "https://www.prothomalo.com/opinion";
@@ -24,29 +26,26 @@ const path = require("path");
 
     const page = await browser.newPage();
 
-    // make navigation more tolerant
-    page.setDefaultNavigationTimeout(120000); // 120s
+    // timeouts
+    page.setDefaultNavigationTimeout(120000);
     page.setDefaultTimeout(120000);
 
-    // optional but stabilizes some sites
+    // stabilize rendering
     await page.setViewport({ width: 1280, height: 800 });
     await page.setUserAgent(
       "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     );
 
-    // try goto with longer timeout and networkidle2
     await page.goto(url, { waitUntil: "networkidle2", timeout: 120000 });
 
-    // wait for a selector present on the page (if known). fallback short wait:
-    await page.waitForTimeout(2000);
+    // compatible pause across Puppeteer versions
+    await sleep(2000);
 
     const html = await page.content();
     fs.writeFileSync(outputFile, html, "utf-8");
     console.log(`Rendered HTML saved to ${outputFile}`);
   } catch (err) {
     console.error("Render failed:", err && err.message ? err.message : err);
-
-    // capture screenshot when possible
     try {
       if (browser) {
         const pages = await browser.pages();
@@ -56,7 +55,6 @@ const path = require("path");
     } catch (sErr) {
       console.error("Screenshot failed:", sErr && sErr.message ? sErr.message : sErr);
     }
-
     process.exitCode = 1;
   } finally {
     if (browser) await browser.close();
