@@ -3,10 +3,10 @@
 Prothom Alo English Opinion scraper → RSS feed
 
 What it does:
-- Fetches https://prothomalo.com/opinion
-- Extracts Quintype JSON from the page
+- Fetches all URLs in SOURCES
+- Extracts Quintype JSON from each page
 - Builds/updates opinion.xml
-- Dedupes by stable GUID
+- Dedupes by stable GUID across all sources
 - Keeps only the newest MAX_ARTICLES items
 - Uses metadata.excerpt as description when available
 - Falls back to author avatar if no story image exists
@@ -34,7 +34,11 @@ import requests
 # ---------------------------------------------------------------------------
 
 BASE_URL = "https://prothomalo.com"
-OPINION_URL = f"{BASE_URL}/opinion"
+OPINION_URL = f"{BASE_URL}/opinion"  # canonical feed link / channel metadata
+SOURCES = [
+    OPINION_URL,
+    "https://www.prothomalo.com/collection/opinion-featured",
+]
 OUTPUT_FILE = Path("opinion.xml")
 IMAGE_CDN = "https://media.prothomalo.com"
 IMAGE_WIDTH = 600
@@ -397,43 +401,48 @@ def build_rss(items: list[ET.Element]) -> str:
 # ---------------------------------------------------------------------------
 
 def main() -> None:
-    print(f"Fetching {OPINION_URL} ...", file=sys.stderr)
-    html = fetch_html(OPINION_URL)
-
-    print("Extracting Quintype JSON ...", file=sys.stderr)
-    data = extract_quintype_json(html)
-
-    try:
-        collection = data["qt"]["data"]["collection"]
-    except Exception as e:
-        raise KeyError(f"Could not find qt.data.collection in extracted JSON: {e}")
-
-    raw_stories: list[dict] = []
-    collect_stories(collection, raw_stories)
-    print(f"Stories scraped from page: {len(raw_stories)}", file=sys.stderr)
-
     existing_guids, existing_items = load_existing(OUTPUT_FILE)
     print(f"Existing articles in feed: {len(existing_items)}", file=sys.stderr)
 
     seen_in_batch: set[str] = set()
     new_items: list[ET.Element] = []
 
-    for story in raw_stories:
-        item = story_to_item(story)
-        if item is None:
+    for source_url in SOURCES:
+        print(f"\nFetching {source_url} ...", file=sys.stderr)
+        try:
+            html = fetch_html(source_url)
+        except Exception as e:
+            print(f"ERROR: skipping {source_url}: {e}", file=sys.stderr)
             continue
 
-        guid = safe_text(item.findtext("guid"))
-        if not guid:
+        print("Extracting Quintype JSON ...", file=sys.stderr)
+        try:
+            data = extract_quintype_json(html)
+            collection = data["qt"]["data"]["collection"]
+        except Exception as e:
+            print(f"ERROR: skipping {source_url}: {e}", file=sys.stderr)
             continue
 
-        if guid in existing_guids or guid in seen_in_batch:
-            continue
+        raw_stories: list[dict] = []
+        collect_stories(collection, raw_stories)
+        print(f"Stories scraped: {len(raw_stories)}", file=sys.stderr)
 
-        seen_in_batch.add(guid)
-        new_items.append(item)
+        for story in raw_stories:
+            item = story_to_item(story)
+            if item is None:
+                continue
 
-    print(f"New articles to append: {len(new_items)}", file=sys.stderr)
+            guid = safe_text(item.findtext("guid"))
+            if not guid:
+                continue
+
+            if guid in existing_guids or guid in seen_in_batch:
+                continue
+
+            seen_in_batch.add(guid)
+            new_items.append(item)
+
+    print(f"\nNew articles to append: {len(new_items)}", file=sys.stderr)
 
     merged = new_items + existing_items
 
