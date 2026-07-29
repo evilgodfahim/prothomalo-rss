@@ -34,7 +34,7 @@ import requests
 # ---------------------------------------------------------------------------
 
 BASE_URL = "https://prothomalo.com"
-OPINION_URL = f"{BASE_URL}/world"
+OPINION_URL = f"{BASE_URL}/opinion"
 OUTPUT_FILE = Path("opinion.xml")
 IMAGE_CDN = "https://media.prothomalo.com"
 IMAGE_WIDTH = 600
