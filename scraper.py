@@ -11,7 +11,10 @@ What it does:
 - Uses metadata.excerpt as description when available
 - Falls back to author avatar if no story image exists
 
-This version fixes the duplicate-xmlns XML error.
+Output XML is clean RSS 2.0:
+- No minidom / no blank lines / no duplicate xmlns declarations
+- Namespaces (media, dc, atom) declared once on <rss> root
+- Compatible with feedparser (aggregator reads media:content, dc:creator, pubDate)
 """
 
 from __future__ import annotations
@@ -24,7 +27,6 @@ from datetime import datetime, timezone
 from email.utils import formatdate
 from pathlib import Path
 from typing import Any
-from xml.dom.minidom import parseString
 from xml.etree import ElementTree as ET
 
 import requests
@@ -34,7 +36,7 @@ import requests
 # ---------------------------------------------------------------------------
 
 BASE_URL = "https://prothomalo.com"
-OPINION_URL = f"{BASE_URL}/opinion"  # canonical feed link / channel metadata
+OPINION_URL = f"{BASE_URL}/opinion"
 SOURCES = [
     OPINION_URL,
     "https://www.prothomalo.com/collection/opinion-featured",
@@ -60,12 +62,14 @@ HEADERS = {
 }
 
 NS_MEDIA = "http://search.yahoo.com/mrss/"
-NS_DC = "http://purl.org/dc/elements/1.1/"
-NS_ATOM = "http://www.w3.org/2005/Atom"
+NS_DC    = "http://purl.org/dc/elements/1.1/"
+NS_ATOM  = "http://www.w3.org/2005/Atom"
 
+# Register once at import time so ET uses these prefixes everywhere,
+# including when round-tripping items loaded from an existing feed file.
 ET.register_namespace("media", NS_MEDIA)
-ET.register_namespace("dc", NS_DC)
-ET.register_namespace("atom", NS_ATOM)
+ET.register_namespace("dc",    NS_DC)
+ET.register_namespace("atom",  NS_ATOM)
 
 
 # ---------------------------------------------------------------------------
@@ -115,7 +119,7 @@ def fetch_html(url: str, retries: int = RETRIES) -> str:
 
             html = resp.text
             if len(html) < 500:
-                raise ValueError(f"Response too small to be real HTML ({len(html)} chars)")
+                raise ValueError(f"Response too small ({len(html)} chars)")
 
             print(f"Fetched {len(html):,} chars (attempt {attempt})", file=sys.stderr)
             return html
@@ -180,9 +184,8 @@ def extract_quintype_json(html: str) -> dict:
     print(f"HTML length: {len(html)}", file=sys.stderr)
     print(f"<script> tags: {html.count('<script')}", file=sys.stderr)
     print(f'"static-page": {html.count("static-page")}', file=sys.stderr)
-    qt_count = html.count('"qt"')
-    print(f'"qt": {qt_count}', file=sys.stderr)
-    print("First 1200 chars of decoded HTML:", file=sys.stderr)
+    print(f'"qt": {html.count(chr(34) + "qt" + chr(34))}', file=sys.stderr)
+    print("First 1200 chars:", file=sys.stderr)
     print(html[:1200], file=sys.stderr)
     raise ValueError("Quintype JSON blob not found. See diagnostic output above.")
 
@@ -207,6 +210,10 @@ def collect_stories(obj: object, out: list[dict]) -> None:
 # ---------------------------------------------------------------------------
 
 def get_description(story: dict) -> str:
+    """
+    Priority: metadata.excerpt → subheadline → section display-name.
+    Feedparser maps <description> to entry.summary, which the aggregator reads.
+    """
     metadata = story.get("metadata") or {}
     excerpt = safe_text(metadata.get("excerpt"))
     if excerpt:
@@ -225,6 +232,11 @@ def get_description(story: dict) -> str:
 
 
 def get_thumbnail(story: dict) -> str:
+    """
+    Emitted as <media:content url="..." medium="image">.
+    Feedparser maps this to entry.media_content[0]['url'],
+    which the aggregator's get_thumbnail() picks up.
+    """
     hero = safe_text(story.get("hero-image-s3-key"))
     if hero:
         return build_image_url(hero)
@@ -297,21 +309,22 @@ def get_pub_ms(story: dict) -> int | None:
 
 
 # ---------------------------------------------------------------------------
-# Story → RSS item
+# Story → RSS <item>
 # ---------------------------------------------------------------------------
 
 def story_to_item(story: dict) -> ET.Element | None:
     headline = safe_text(story.get("headline"))
-    url = get_story_url(story)
-    guid = get_story_guid(story)
+    url      = get_story_url(story)
+    guid     = get_story_guid(story)
 
     if not headline or not url or not guid:
         return None
 
     item = ET.Element("item")
 
-    ET.SubElement(item, "title").text = headline
-    ET.SubElement(item, "link").text = url
+    # Core fields — feedparser maps these to entry.title, entry.link, entry.summary
+    ET.SubElement(item, "title").text       = headline
+    ET.SubElement(item, "link").text        = url
     ET.SubElement(item, "guid", isPermaLink="false").text = guid
 
     description = get_description(story)
@@ -322,15 +335,17 @@ def story_to_item(story: dict) -> ET.Element | None:
     if pub_ms:
         ET.SubElement(item, "pubDate").text = ms_to_rfc2822(pub_ms)
 
+    # dc:creator — feedparser maps to entry.author
     authors = get_authors(story)
     if authors:
         ET.SubElement(item, f"{{{NS_DC}}}creator").text = ", ".join(authors)
 
+    # category — section first, then tags
     sections = story.get("sections") or []
     if sections and isinstance(sections, list):
         first = sections[0] or {}
         section_name = safe_text(first.get("display-name") or first.get("name"))
-        section_url = safe_text(first.get("section-url"))
+        section_url  = safe_text(first.get("section-url"))
         if section_name:
             cat = ET.SubElement(item, "category")
             cat.text = section_name
@@ -340,10 +355,12 @@ def story_to_item(story: dict) -> ET.Element | None:
     for tag in get_tags(story):
         ET.SubElement(item, "category").text = tag
 
+    # media:content — feedparser maps to entry.media_content[0]['url']
+    # aggregator's get_thumbnail() reads this as the thumbnail
     thumbnail = get_thumbnail(story)
     if thumbnail:
         mc = ET.SubElement(item, f"{{{NS_MEDIA}}}content")
-        mc.set("url", thumbnail)
+        mc.set("url",    thumbnail)
         mc.set("medium", "image")
         mt = ET.SubElement(mc, f"{{{NS_MEDIA}}}title")
         mt.text = headline
@@ -352,7 +369,7 @@ def story_to_item(story: dict) -> ET.Element | None:
 
 
 # ---------------------------------------------------------------------------
-# RSS persistence
+# RSS persistence — load existing items for dedup / merge
 # ---------------------------------------------------------------------------
 
 def load_existing(file: Path) -> tuple[set[str], list[ET.Element]]:
@@ -360,8 +377,8 @@ def load_existing(file: Path) -> tuple[set[str], list[ET.Element]]:
         return set(), []
 
     try:
-        tree = ET.parse(file)
-        root = tree.getroot()
+        tree  = ET.parse(file)
+        root  = tree.getroot()
         items = list(root.findall("./channel/item"))
         guids = {
             safe_text(item.findtext("guid"))
@@ -374,26 +391,55 @@ def load_existing(file: Path) -> tuple[set[str], list[ET.Element]]:
         return set(), []
 
 
-def build_rss(items: list[ET.Element]) -> str:
-    rss = ET.Element("rss", version="2.0")
+# ---------------------------------------------------------------------------
+# Build clean RSS XML string
+# ---------------------------------------------------------------------------
 
+def build_rss(items: list[ET.Element]) -> str:
+    """
+    Produces clean RSS 2.0:
+    - ET.indent() for pretty-printing (Python 3.9+, no minidom)
+    - All three namespaces declared once on <rss>, never inline on child elements
+    - Standard <?xml ...?> declaration on line 1
+    """
+    rss     = ET.Element("rss", version="2.0")
     channel = ET.SubElement(rss, "channel")
-    ET.SubElement(channel, "title").text = "Prothom Alo — Opinion"
-    ET.SubElement(channel, "link").text = OPINION_URL
+
+    ET.SubElement(channel, "title").text       = "Prothom Alo — Opinion"
+    ET.SubElement(channel, "link").text        = OPINION_URL
     ET.SubElement(channel, "description").text = "Opinion articles from Prothom Alo English"
-    ET.SubElement(channel, "language").text = "en"
+    ET.SubElement(channel, "language").text    = "en"
     ET.SubElement(channel, "lastBuildDate").text = formatdate(usegmt=True)
 
     atom_link = ET.SubElement(channel, f"{{{NS_ATOM}}}link")
     atom_link.set("href", OPINION_URL)
-    atom_link.set("rel", "self")
+    atom_link.set("rel",  "self")
     atom_link.set("type", "application/rss+xml")
 
     for item in items:
         channel.append(item)
 
+    # Pretty-print without minidom (no blank lines, no bogus text nodes)
+    ET.indent(rss, space="  ")
     raw = ET.tostring(rss, encoding="unicode")
-    return parseString(raw).toprettyxml(indent="  ")
+
+    # ET declares namespaces at first-use site — strip every inline occurrence,
+    # then hoist all three to the root element where they belong.
+    for prefix, uri in (("media", NS_MEDIA), ("dc", NS_DC), ("atom", NS_ATOM)):
+        raw = raw.replace(f' xmlns:{prefix}="{uri}"', "")
+
+    raw = raw.replace(
+        '<rss version="2.0">',
+        (
+            f'<rss version="2.0"'
+            f' xmlns:media="{NS_MEDIA}"'
+            f' xmlns:dc="{NS_DC}"'
+            f' xmlns:atom="{NS_ATOM}">'
+        ),
+        1,
+    )
+
+    return f'<?xml version="1.0" encoding="UTF-8"?>\n{raw}\n'
 
 
 # ---------------------------------------------------------------------------
@@ -404,8 +450,8 @@ def main() -> None:
     existing_guids, existing_items = load_existing(OUTPUT_FILE)
     print(f"Existing articles in feed: {len(existing_items)}", file=sys.stderr)
 
-    seen_in_batch: set[str] = set()
-    new_items: list[ET.Element] = []
+    seen_in_batch: set[str]      = set()
+    new_items:     list[ET.Element] = []
 
     for source_url in SOURCES:
         print(f"\nFetching {source_url} ...", file=sys.stderr)
@@ -417,7 +463,7 @@ def main() -> None:
 
         print("Extracting Quintype JSON ...", file=sys.stderr)
         try:
-            data = extract_quintype_json(html)
+            data       = extract_quintype_json(html)
             collection = data["qt"]["data"]["collection"]
         except Exception as e:
             print(f"ERROR: skipping {source_url}: {e}", file=sys.stderr)
@@ -448,7 +494,7 @@ def main() -> None:
 
     if len(merged) > MAX_ARTICLES:
         dropped = len(merged) - MAX_ARTICLES
-        merged = merged[:MAX_ARTICLES]
+        merged  = merged[:MAX_ARTICLES]
         print(f"Cap reached: dropped {dropped} oldest articles", file=sys.stderr)
 
     rss_xml = build_rss(merged)
