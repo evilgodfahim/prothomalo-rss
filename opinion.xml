@@ -5,8 +5,23 @@
     <link>https://prothomalo.com/opinion</link>
     <description>Opinion articles from Prothom Alo English</description>
     <language>en</language>
-    <lastBuildDate>Mon, 23 Nov 2026 13:51:43 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 24 Nov 2026 01:22:47 GMT</lastBuildDate>
     <atom:link href="https://prothomalo.com/opinion" rel="self" type="application/rss+xml" />
+    <item>
+      <title>ইলন মাস্ক তারুণ্যের হিরো নাকি ভিলেন</title>
+      <link>https://www.prothomalo.com/opinion/column/9d5rljk8gy</link>
+      <guid isPermaLink="false">https://prothomalo.com/story/2d479405-64e7-42eb-ac91-336fe5859922</guid>
+      <description>ইলন মাস্ক তরুণদের একটি বড় অংশের কাছে রোল মডেল। কিন্তু তাঁর আর্থিক সফলতার পেছনে যেসব চালাকির গল্প আছে, তা কি তারা জানে?</description>
+      <pubDate>Mon, 23 Nov 2026 15:17:29 GMT</pubDate>
+      <dc:creator>সারফুদ্দিন আহমেদ</dc:creator>
+      <category domain="https://www.prothomalo.com/opinion/column">কলাম</category>
+      <category>স্পেসএক্স</category>
+      <category>টুইটার</category>
+      <category>ইলন মাস্ক</category>
+      <media:content url="https://media.prothomalo.com/prothomalo-bangla/2026-11-23/n94jdgvg/china.jpg?w=600&amp;auto=format" medium="image">
+        <media:title>ইলন মাস্ক তারুণ্যের হিরো নাকি ভিলেন</media:title>
+      </media:content>
+    </item>
     <item>
       <title>চীন কেন জনসংখ্যা নিয়ে এই জালিয়াতি করল</title>
       <link>https://www.prothomalo.com/opinion/column/qxdoguhtm6</link>
@@ -7578,27 +7593,6 @@
       <category>লেখকের কলাম</category>
       <media:content url="https://media.prothomalo.com/prothomalo/import/media/2019/05/17/2aa5e01f4bab3dd4538e6f2a03a4704e-5cdee41326288.jpg?w=600&amp;auto=format" medium="image">
         <media:title>ইউরোপ কেন স্বাধীন পররাষ্ট্রনীতি নিতে পারে না</media:title>
-      </media:content>
-    </item>
-    <item>
-      <title>বিমানবন্দর থেকে বাংলাবাজার: কার মর্জিতে চলবে আইন?</title>
-      <link>https://www.prothomalo.com/opinion/column/dyhoyb95sx</link>
-      <guid isPermaLink="false">https://prothomalo.com/story/fdceb50a-25bc-4671-aa8f-8c1a233b2e88</guid>
-      <description>আমি এমন একটা সময়ে এই লেখাটা লিখছি, যখন গত কয়েক সপ্তাহে ঘটে যাওয়া কয়েকটা ঘটনা খুব স্পষ্টভাবেই চোখের সামনে এসেছে। ঘটনাগুলো আলাদা।</description>
-      <pubDate>Sat, 03 Oct 2026 12:03:03 GMT</pubDate>
-      <dc:creator>আসিফ বিন আলী</dc:creator>
-      <category domain="https://www.prothomalo.com/opinion/column">কলাম</category>
-      <category>বাল্যবিবাহ</category>
-      <category>আইনশৃঙ্খলা</category>
-      <category>পুলিশ</category>
-      <category>রাষ্ট্র ও রাজনীতি</category>
-      <category>নারী</category>
-      <category>পোশাক</category>
-      <category>মিরপুর</category>
-      <category>লেখকের কলাম</category>
-      <category>আইন</category>
-      <media:content url="https://media.prothomalo.com/prothomalo-bangla/2026-09-30/xesj324y/RADDAMIRPUR1MIR290926-17050024.JPG?w=600&amp;auto=format" medium="image">
-        <media:title>বিমানবন্দর থেকে বাংলাবাজার: কার মর্জিতে চলবে আইন?</media:title>
       </media:content>
     </item>
   </channel>
