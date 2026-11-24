@@ -5,8 +5,24 @@
     <link>https://prothomalo.com/opinion</link>
     <description>Opinion articles from Prothom Alo English</description>
     <language>en</language>
-    <lastBuildDate>Tue, 24 Nov 2026 11:13:43 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 24 Nov 2026 21:24:20 GMT</lastBuildDate>
     <atom:link href="https://prothomalo.com/opinion" rel="self" type="application/rss+xml" />
+    <item>
+      <title>প্রচলিত রাজনীতিতে হতাশ মানুষ, বিশ্ব কি নতুন পথ খুঁজছে</title>
+      <link>https://www.prothomalo.com/opinion/column/jgvyb549m4</link>
+      <guid isPermaLink="false">https://prothomalo.com/story/9b4c67af-76b7-4000-8e1d-aae0b1adeb60</guid>
+      <description>সাম্প্রতিক মাসগুলোতে বিশ্বের বিভিন্ন প্রান্তে—ফ্রান্স, ভারত, ইতালি, আলবেনিয়া, স্পেন, সার্বিয়াসহ বিভিন্ন দেশে—একের পর এক আন্দোলন ও বিক্ষোভ ছড়িয়ে পড়েছে।</description>
+      <pubDate>Tue, 24 Nov 2026 13:39:34 GMT</pubDate>
+      <dc:creator>সহুল আহমদ</dc:creator>
+      <category domain="https://www.prothomalo.com/opinion/column">কলাম</category>
+      <category>ফ্রান্স</category>
+      <category>সার্বিয়া</category>
+      <category>ইউরোপ</category>
+      <category>আন্দোলন</category>
+      <media:content url="https://media.prothomalo.com/prothomalo-bangla/2026-10-26/y3l5k3u3/Belgrade.jfif?w=600&amp;auto=format" medium="image">
+        <media:title>প্রচলিত রাজনীতিতে হতাশ মানুষ, বিশ্ব কি নতুন পথ খুঁজছে</media:title>
+      </media:content>
+    </item>
     <item>
       <title>অভিভাবকত্বের প্রশ্নে শিশুর কল্যাণই হোক শেষ কথা</title>
       <link>https://www.prothomalo.com/opinion/column/zemz7ikd5m</link>
@@ -7580,21 +7596,6 @@
       <category>স্বাস্থ্য</category>
       <media:content url="https://media.prothomalo.com/prothomalo-bangla/2026-10-04/b1zwhksi/health-complex.png?w=600&amp;auto=format" medium="image">
         <media:title>সব উপজেলা স্বাস্থ্য কমপ্লেক্স ১৫১ শয্যায় উন্নীত করা কতটা যৌক্তিক</media:title>
-      </media:content>
-    </item>
-    <item>
-      <title>চরম বৈষম্য আর কর্মসংস্থানহীন প্রবৃদ্ধি অস্থিরতা তৈরি করতে বাধ্য</title>
-      <link>https://www.prothomalo.com/opinion/interview/v6gphwmsjo</link>
-      <guid isPermaLink="false">https://prothomalo.com/story/7aa18538-09ba-4d92-9503-0bc5ae631ccf</guid>
-      <description>বাংলাদেশে নব্বইয়ের দশক থেকে দারিদ্র্য বিমোচনের মূল কৌশল ছিল ‘ট্রিকেল ডাউন ইফেক্ট’।</description>
-      <pubDate>Sun, 04 Oct 2026 05:55:23 GMT</pubDate>
-      <dc:creator>সহুল আহমদ</dc:creator>
-      <category domain="https://www.prothomalo.com/opinion/interview">সাক্ষাৎকার</category>
-      <category>কর্মসংস্থান</category>
-      <category>সাক্ষাৎকার</category>
-      <category>অর্থনীতি</category>
-      <media:content url="https://media.prothomalo.com/prothomalo-bangla/2026-10-04/rwl1i889/MARAZZAQMIR021026-7051248.jpg?w=600&amp;auto=format" medium="image">
-        <media:title>চরম বৈষম্য আর কর্মসংস্থানহীন প্রবৃদ্ধি অস্থিরতা তৈরি করতে বাধ্য</media:title>
       </media:content>
     </item>
   </channel>
